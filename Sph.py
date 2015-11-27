@@ -74,6 +74,7 @@ def _calc_dpressure(subj, neighbours, subj_rho):
 
 
 def _calc_viscosity(subj, neighbours):
+    return 0., 0.  # todo uncomment
     visc_x = 0.
     visc_y = 0.
     for n in neighbours:
@@ -97,12 +98,12 @@ def compute_next_state(particles):
         ext_forces_x, ext_forces_y = _calc_ext_forces(p, particles)
         acceleration_x = (-dpressure_x + visc_x + ext_forces_x) / rho
         acceleration_y = (-dpressure_y + visc_y + ext_forces_y) / rho
-        nvx = acceleration_x * dt
-        nvy = acceleration_y * dt
-        nx = nvx * dt
+        nvx = p.vx + acceleration_x * dt
+        nvy = p.vy + acceleration_y * dt
+        nx = p.x + dt * (nvx + dt / 2. * acceleration_x)
         if nx >= 640:
             nx = 640. - (nx - (640. - p.x))
-        ny = nvy * dt
+        ny = p.y + dt * (nvy + dt / 2. * acceleration_y)
         if ny >= 480:
             ny = 480. - (ny - (480. - p.y))
         new = Particle()
