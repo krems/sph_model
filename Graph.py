@@ -8,10 +8,9 @@ import random
 
 import sfml as sf
 
-window = sf.RenderWindow(sf.VideoMode(X_SIZE, Y_SIZE), "pySFML Window")
+window = sf.RenderWindow(sf.VideoMode(X_SIZE, Y_SIZE), "Water under gravity")
 
 particles = []
-positions = []
 
 for i in range(0, 150):
     particle = SPH.Particle()
@@ -29,11 +28,13 @@ while window.is_open:
         if type(event) is sf.CloseEvent:
             window.close()
 
-    particles = SPH.compute_next_state(particles)
     window.clear()
     for p in particles:
+        p.radius = 10
+        p.outline_thickness = 0
         p.position = p.x, p.y
         window.draw(p)
     window.display()
-    sleep(milliseconds(50))
+    particles = SPH.compute_next_state(particles)
+    sleep(milliseconds(5))
 
