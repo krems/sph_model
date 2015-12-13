@@ -2,7 +2,6 @@ Y_SIZE = 480.
 X_SIZE = 640.
 __author__ = 'krm'
 
-from sfml.system import sleep, milliseconds
 import Sph as SPH
 import random
 
@@ -19,7 +18,7 @@ for i in range(0, 150):
     particle.set_params(x, y, 0., 0., 1.)
     particle.radius = 10
     particle.outline_thickness = 0
-    particle.position = particle.x, particle.y
+    particle.position = X_SIZE - particle.x, Y_SIZE - particle.y
     particles.append(particle)
 
 
@@ -32,9 +31,8 @@ while window.is_open:
     for p in particles:
         p.radius = 10
         p.outline_thickness = 0
-        p.position = p.x, p.y
+        p.position = X_SIZE - p.x, Y_SIZE - p.y
         window.draw(p)
     window.display()
     particles = SPH.compute_next_state(particles)
-    sleep(milliseconds(5))
 

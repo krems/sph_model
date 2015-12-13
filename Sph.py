@@ -2,10 +2,10 @@ __author__ = 'krm'
 import sfml as sf
 from math import pi, sqrt
 
-dt = 0.001
+dt = 0.1
 h = 10.
-k_press = 100.
-mu_visc = 0.
+k_press = .5
+mu_visc = 0.05
 
 class Particle(sf.CircleShape):
     m = 1.
@@ -74,7 +74,6 @@ def _calc_dpressure(subj, neighbours, subj_rho):
 
 
 def _calc_viscosity(subj, neighbours):
-    return 0., 0.  # todo uncomment
     visc_x = 0.
     visc_y = 0.
     for n in neighbours:
@@ -86,7 +85,7 @@ def _calc_viscosity(subj, neighbours):
 
 
 def _calc_ext_forces(subj, neighbours):
-    return 0., -10.
+    return 0., -1.
 
 
 def compute_next_state(particles):
@@ -101,13 +100,14 @@ def compute_next_state(particles):
         nvx = p.vx + acceleration_x * dt
         nvy = p.vy + acceleration_y * dt
         nx = p.x + dt * (nvx + dt / 2. * acceleration_x)
-        if nx >= 640:
-            nx = 640. - (nx - (640. - p.x))
+        if nx < 0:
+            nx = -nx
+            nvx = -nvx
         ny = p.y + dt * (nvy + dt / 2. * acceleration_y)
-        if ny >= 480:
-            ny = 480. - (ny - (480. - p.y))
+        if ny < 0:
+            ny = -ny
+            nvy = -nvy
         new = Particle()
         new.set_params(nx, ny, nvx, nvy, rho)
-        # print(nx, ny, nvx, nvy, rho)
         result.append(new)
     return result
