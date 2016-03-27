@@ -11,11 +11,11 @@ window = sf.RenderWindow(sf.VideoMode(X_SIZE, Y_SIZE), "Water under gravity")
 
 particles = []
 
-for i in range(0, 150):
+for i in range(0, 250):
     particle = SPH.Particle()
     x = (random.randint(0, 50) * i) % X_SIZE
     y = (random.randint(0, 30) * i) % Y_SIZE
-    particle.set_params(x, y, 0., 0., 1.)
+    particle.set_params(x, y, 0., 0., 1., 1., 1.)
     particle.radius = 10
     particle.outline_thickness = 0
     particle.position = X_SIZE - particle.x, Y_SIZE - particle.y

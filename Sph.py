@@ -1,11 +1,12 @@
 __author__ = 'krm'
 import sfml as sf
+import numpy as np
 from math import pi, sqrt
 
 dt = 0.1
-h = 10.
-k_press = .5
+h = 50.
 mu_visc = 0.05
+
 
 class Particle(sf.CircleShape):
     m = 1.
@@ -14,12 +15,17 @@ class Particle(sf.CircleShape):
     vx = 0.
     vy = 0.
     rho = 1.
+    press_x = 0.
+    press_y = 0.
+    force = 0.
 
-    def set_params(self, x, y, vx, vy, rho):
+    def set_params(self, x, y, vx, vy, press_x, press_y, rho):
         self.x = x
         self.y = y
         self.vx = vx
         self.vy = vy
+        self.press_x = press_x
+        self.press_y = press_y
         self.rho = rho
 
 
@@ -34,7 +40,15 @@ def _w_rho(subj, neighbour):
     return 315. / (64. * pi * (h ** 9)) * (h ** 2 - dist) ** 3
 
 
-def _dw_dpressure(subj, neighbour):
+def _w_pressure(subj, neighbour):
+    dist = _distance(subj, neighbour)
+    if dist >= h ** 2 or dist == 0:
+        return 0., 0.
+    mul = 15. / (pi * h ** 6) * (h - sqrt(dist)) ** 3
+    return mul * (subj.x - neighbour.x), mul * (subj.y - neighbour.y)
+
+
+def _dw_pressure(subj, neighbour):
     dist = _distance(subj, neighbour)
     if dist >= h ** 2 or dist == 0:
         return 0., 0.
@@ -49,65 +63,50 @@ def _ddw_visc(subj, neighbour):
     return 45. / (pi * h ** 6) * (h - sqrt(dist))
 
 
-def _calc_rho(subj, neighbours):
-    rho = 0.
-    for n in neighbours:
-        if _distance(subj, n) >= h or n == subj:
-            continue
-        rho += n.m * _w_rho(subj, n)
-    if rho == 0:
-        return subj.rho
-    return rho
-
-
-def _calc_dpressure(subj, neighbours, subj_rho):
-    dp_x = 0.
-    dp_y = 0.
-    for n in neighbours:
-        if _distance(subj, n) >= h or n == subj:
-            continue
-        ker_x, ker_y = _dw_dpressure(subj, n)
-        mul = n.m * k_press * (subj_rho + n.rho) / (2. * n.rho)
-        dp_x += mul * ker_x
-        dp_y += mul * ker_y
-    return dp_x, dp_y
-
-
-def _calc_viscosity(subj, neighbours):
-    visc_x = 0.
-    visc_y = 0.
-    for n in neighbours:
-        if _distance(subj, n) >= h or n == subj:
-            continue
-        visc_x += n.m * (n.vx - subj.vx) / n.rho * _ddw_visc(subj, n)
-        visc_y += n.m * (n.vy - subj.vy) / n.rho * _ddw_visc(subj, n)
-    return mu_visc * visc_x, mu_visc * visc_y
-
-
-def _calc_ext_forces(subj, neighbours):
-    return 0., -1.
-
-
 def compute_next_state(particles):
     result = []
-    for p in particles:
-        rho = _calc_rho(p, particles)
-        dpressure_x, dpressure_y = _calc_dpressure(p, particles, rho)
-        visc_x, visc_y = _calc_viscosity(p, particles)
-        ext_forces_x, ext_forces_y = _calc_ext_forces(p, particles)
-        acceleration_x = (-dpressure_x + visc_x + ext_forces_x) / rho
-        acceleration_y = (-dpressure_y + visc_y + ext_forces_y) / rho
-        nvx = p.vx + acceleration_x * dt
-        nvy = p.vy + acceleration_y * dt
-        nx = p.x + dt * (nvx + dt / 2. * acceleration_x)
+    for subj in particles:
+        rho = subj.rho
+        dp_x = 0.
+        dp_y = 0.
+        visc_x = 0.
+        visc_y = 0.
+        ext_forces_x = 0.
+        ext_forces_y = -1.
+        pressure_x = 0.
+        pressure_y = 0.
+        for n in particles:
+            if _distance(subj, n) < h and n != subj:
+                rho += n.m * _w_rho(subj, n)
+
+                dpress_ker_x, dpress_ker_y = _dw_pressure(subj, n)
+                dp_x += dpress_ker_x * n.m * (subj.press_x + n.press_x) / (2. * n.rho)
+                dp_y += dpress_ker_y * n.m * (subj.press_y + n.press_y) / (2. * n.rho)
+
+                dd_visc_ker = _ddw_visc(subj, n)
+                visc_x += n.m * (n.vx - subj.vx) / n.rho * dd_visc_ker
+                visc_y += n.m * (n.vy - subj.vy) / n.rho * dd_visc_ker
+
+                ker_x, ker_y = _w_pressure(subj, n)
+                pressure_x += ker_x * n.m * (subj.press_x + n.press_x) / (2. * n.rho)
+                pressure_y += ker_y * n.m * (subj.press_y + n.press_y) / (2. * n.rho)
+
+        visc_x *= mu_visc
+        visc_y *= mu_visc
+        acceleration_x = (-dp_x + visc_x + ext_forces_x) / rho
+        acceleration_y = (-dp_y + visc_y + ext_forces_y) / rho
+        nvx = subj.vx + acceleration_x * dt
+        nvy = subj.vy + acceleration_y * dt
+        nx = subj.x + dt * (nvx + dt / 2. * acceleration_x)
         if nx < 0:
-            nx = -nx
-            nvx = -nvx
-        ny = p.y + dt * (nvy + dt / 2. * acceleration_y)
+            nx = -nx * 0.7
+            nvx = -nvx * 0.7
+        ny = subj.y + dt * (nvy + dt / 2. * acceleration_y)
         if ny < 0:
-            ny = -ny
-            nvy = -nvy
+            ny = -ny * 0.7
+            nvy = -nvy * 0.7
+
         new = Particle()
-        new.set_params(nx, ny, nvx, nvy, rho)
+        new.set_params(nx, ny, nvx, nvy, pressure_x, pressure_y, rho)
         result.append(new)
     return result
