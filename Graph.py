@@ -1,3 +1,4 @@
+BOUND = 20.
 Y_SIZE = 480.
 X_SIZE = 640.
 
@@ -13,9 +14,9 @@ def water_fall(particleCount):
     _particles = []
     for i in range(0, particleCount):
         particle = SPH.Particle()
-        width = X_SIZE / 4
-        x = (X_SIZE - width) + (random.randint(0, width)) % width
-        y = (random.randint(0, 30) * i) % Y_SIZE
+        width = (X_SIZE - 2 * BOUND) / 4
+        x = (X_SIZE - BOUND - width) + (random.randint(BOUND, width)) % width
+        y = (random.randint(BOUND, Y_SIZE - BOUND))
         particle.set_params(x, y, 0., 0., 1., 1., 1.)
         particle.radius = 10
         particle.outline_thickness = 0
@@ -28,8 +29,8 @@ def random_rain(particleCount):
     _particles = []
     for i in range(0, particleCount):
         particle = SPH.Particle()
-        x = (random.randint(0, 50) * i) % X_SIZE
-        y = (random.randint(0, 30) * i) % Y_SIZE
+        x = (random.randint(BOUND, X_SIZE - BOUND))
+        y = (random.randint(BOUND, Y_SIZE - BOUND))
         particle.set_params(x, y, 0., 0., 1., 1., 1.)
         particle.radius = 10
         particle.outline_thickness = 0

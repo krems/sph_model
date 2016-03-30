@@ -1,5 +1,6 @@
-Y_SIZE = 480.
-X_SIZE = 640.
+BOUND = 20.
+Y_SIZE = 480. - BOUND
+X_SIZE = 640. - BOUND
 import sfml as sf
 from math import pi, sqrt
 
@@ -67,16 +68,16 @@ def _ddw_visc(subj, neighbour):
 
 
 def xwall_pressure(subj):
-    if subj.x < rest_dist:
-        return subj.m * (rest_dist - subj.x) / dt ** 2
+    if subj.x - BOUND < rest_dist:
+        return subj.m * (rest_dist - (subj.x - BOUND)) / dt ** 2
     if X_SIZE - subj.x < rest_dist:
         return - subj.m * (rest_dist - (X_SIZE - subj.x)) / dt ** 2
     return 0.
 
 
 def ywall_pressure(subj):
-    if subj.y < rest_dist:
-        return subj.m * (rest_dist - subj.y) / dt ** 2
+    if subj.y - BOUND < rest_dist:
+        return subj.m * (rest_dist - (subj.y - BOUND)) / dt ** 2
     if Y_SIZE - subj.y < rest_dist:
         return - subj.m * (rest_dist - (Y_SIZE - subj.y)) / dt ** 2
     return 0.
