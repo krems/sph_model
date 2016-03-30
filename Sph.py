@@ -73,12 +73,21 @@ def xwall_pressure(subj):
         return - subj.m * (rest_dist - (X_SIZE - subj.x)) / dt ** 2
     return 0.
 
+
 def ywall_pressure(subj):
     if subj.y < rest_dist:
         return subj.m * (rest_dist - subj.y) / dt ** 2
     if Y_SIZE - subj.y < rest_dist:
         return - subj.m * (rest_dist - (Y_SIZE - subj.y)) / dt ** 2
     return 0.
+
+
+def internal_pressure(subj, n):
+    dist = sqrt(_distance(subj, n))
+    if dist >= rest_dist or dist == 0.:
+        return 0., 0.
+    press = subj.m * (rest_dist - dist) / dt ** 2
+    return press * (subj.x - n.x) / dist, press * (subj.y - n.y) / dist
 
 
 def compute_next_state(particles):
@@ -100,6 +109,9 @@ def compute_next_state(particles):
                 dpress_ker_x, dpress_ker_y = _dw_pressure(subj, n)
                 dp_x += dpress_ker_x * n.m * (subj.press_x + n.press_x) / (2. * n.rho)
                 dp_y += dpress_ker_y * n.m * (subj.press_y + n.press_y) / (2. * n.rho)
+                ip_x, ip_y = internal_pressure(subj, n)
+                dp_x += ip_x
+                dp_y += ip_y
 
                 dd_visc_ker = _ddw_visc(subj, n)
                 visc_x += n.m * (n.vx - subj.vx) / n.rho * dd_visc_ker
