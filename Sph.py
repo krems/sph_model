@@ -7,7 +7,7 @@ from math import pi, sqrt
 dt = 0.1
 h = 50.
 rest_dist = 1.5
-mu_visc = 0.05
+mu_visc = 0.5
 gravity = 5.
 
 
@@ -102,6 +102,8 @@ def compute_next_state(particles):
         ext_forces_y = - gravity + ywall_pressure(subj)
         pressure_x = 0.
         pressure_y = 0.
+        ip_x = 0.
+        ip_y = 0.
         for n in particles:
             if _distance(subj, n) < h and n != subj:
                 rho += n.m * _w_rho(subj, n)
@@ -109,9 +111,10 @@ def compute_next_state(particles):
                 dpress_ker_x, dpress_ker_y = _dw_pressure(subj, n)
                 dp_x += dpress_ker_x * n.m * (subj.press_x + n.press_x) / (2. * n.rho)
                 dp_y += dpress_ker_y * n.m * (subj.press_y + n.press_y) / (2. * n.rho)
-                ip_x, ip_y = internal_pressure(subj, n)
-                dp_x += ip_x
-                dp_y += ip_y
+
+                ip_x_temp, ip_y_temp = internal_pressure(subj, n)
+                ip_x += ip_x_temp
+                ip_y += ip_y_temp
 
                 dd_visc_ker = _ddw_visc(subj, n)
                 visc_x += n.m * (n.vx - subj.vx) / n.rho * dd_visc_ker
@@ -123,8 +126,8 @@ def compute_next_state(particles):
         visc_x *= mu_visc
         visc_y *= mu_visc
 
-        acceleration_x = (-dp_x + visc_x + ext_forces_x) / rho
-        acceleration_y = (-dp_y + visc_y + ext_forces_y) / rho
+        acceleration_x = (-dp_x + ip_x + visc_x + ext_forces_x) / rho
+        acceleration_y = (-dp_y + ip_y + visc_y + ext_forces_y) / rho
         nvx = subj.vx + acceleration_x * dt
         nvy = subj.vy + acceleration_y * dt
         nx = subj.x + dt * (nvx + dt / 2. * acceleration_x)
