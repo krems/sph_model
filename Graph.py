@@ -1,6 +1,5 @@
 Y_SIZE = 480.
 X_SIZE = 640.
-__author__ = 'krm'
 
 import Sph as SPH
 import random

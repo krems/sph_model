@@ -1,11 +1,14 @@
-__author__ = 'krm'
+Y_SIZE = 480.
+X_SIZE = 640.
 import sfml as sf
-import numpy as np
 from math import pi, sqrt
+
 
 dt = 0.1
 h = 50.
+rest_dist = 1.5
 mu_visc = 0.05
+gravity = 5.
 
 
 class Particle(sf.CircleShape):
@@ -63,6 +66,21 @@ def _ddw_visc(subj, neighbour):
     return 45. / (pi * h ** 6) * (h - sqrt(dist))
 
 
+def xwall_pressure(subj):
+    if subj.x < rest_dist:
+        return subj.m * (rest_dist - subj.x) / dt ** 2
+    if X_SIZE - subj.x < rest_dist:
+        return - subj.m * (rest_dist - (X_SIZE - subj.x)) / dt ** 2
+    return 0.
+
+def ywall_pressure(subj):
+    if subj.y < rest_dist:
+        return subj.m * (rest_dist - subj.y) / dt ** 2
+    if Y_SIZE - subj.y < rest_dist:
+        return - subj.m * (rest_dist - (Y_SIZE - subj.y)) / dt ** 2
+    return 0.
+
+
 def compute_next_state(particles):
     result = []
     for subj in particles:
@@ -71,8 +89,8 @@ def compute_next_state(particles):
         dp_y = 0.
         visc_x = 0.
         visc_y = 0.
-        ext_forces_x = 0.
-        ext_forces_y = -1.
+        ext_forces_x = 0. + xwall_pressure(subj)
+        ext_forces_y = - gravity + ywall_pressure(subj)
         pressure_x = 0.
         pressure_y = 0.
         for n in particles:
@@ -90,21 +108,15 @@ def compute_next_state(particles):
                 ker_x, ker_y = _w_pressure(subj, n)
                 pressure_x += ker_x * n.m * (subj.press_x + n.press_x) / (2. * n.rho)
                 pressure_y += ker_y * n.m * (subj.press_y + n.press_y) / (2. * n.rho)
-
         visc_x *= mu_visc
         visc_y *= mu_visc
+
         acceleration_x = (-dp_x + visc_x + ext_forces_x) / rho
         acceleration_y = (-dp_y + visc_y + ext_forces_y) / rho
         nvx = subj.vx + acceleration_x * dt
         nvy = subj.vy + acceleration_y * dt
         nx = subj.x + dt * (nvx + dt / 2. * acceleration_x)
-        if nx < 0:
-            nx = -nx * 0.7
-            nvx = -nvx * 0.7
         ny = subj.y + dt * (nvy + dt / 2. * acceleration_y)
-        if ny < 0:
-            ny = -ny * 0.7
-            nvy = -nvy * 0.7
 
         new = Particle()
         new.set_params(nx, ny, nvx, nvy, pressure_x, pressure_y, rho)
