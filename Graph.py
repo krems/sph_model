@@ -20,13 +20,13 @@ def water_behind_the_wall(particleCount):
         particle = SPH.Particle()
         if x >= X1_WALL - 2:
             x = BOUND_X + 1
-            y += 2
+            y += 1
         particle.set_params(x, y, 0., 0., 1.)
         particle.radius = PARTICLE_RADIUS
         particle.outline_thickness = 0
         particle.position = X_SIZE - particle.x, Y_SIZE - particle.y
         _particles.append(particle)
-        x += 3
+        x += 2
     return _particles
 
 
@@ -140,9 +140,31 @@ def set_rest_rho(particles):
     return particles
 
 
+def draw_borders(window):
+    rectangle = sf.RectangleShape((BOUND_X, Y_SIZE))
+    rectangle.position = (0, 0)
+    rectangle.fill_color = sf.Color.CYAN
+    window.draw(rectangle)
+
+    rectangle1 = sf.RectangleShape((X_SIZE, BOUND_Y))
+    rectangle1.position = (0, 0)
+    rectangle1.fill_color = sf.Color.CYAN
+    window.draw(rectangle1)
+
+    rectangle2 = sf.RectangleShape((X_SIZE, BOUND_Y))
+    rectangle2.position = (0, Y_SIZE - BOUND_Y)
+    rectangle2.fill_color = sf.Color.CYAN
+    window.draw(rectangle2)
+
+    rectangle3 = sf.RectangleShape((X_SIZE, Y_SIZE))
+    rectangle3.position = (X_SIZE - BOUND_X, BOUND_Y)
+    rectangle3.fill_color = sf.Color.CYAN
+    window.draw(rectangle3)
+
+
 def main():
     window = sf.RenderWindow(sf.VideoMode(X_SIZE, Y_SIZE), "Water under gravity")
-    particles = water_behind_the_wall(450)
+    particles = water_behind_the_wall(500)
     set_rest_rho(particles)
     while window.is_open:
         for event in window.events:
@@ -158,6 +180,8 @@ def main():
                 draw_velocities(window, p)
             if DRAW_PRESSURE:
                 draw_pressure(window, p)
+        draw_borders(window)
+        SPH.wall(window)
         window.display()
         particles = SPH.compute_next_state(particles)
 

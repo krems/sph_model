@@ -146,7 +146,7 @@ def _distance_q(lhs, rhs):
 
 
 def enable_wall(func):
-    timeout = 40
+    timeout = 100
     timestamp = time()
 
     @functools.wraps(func)
@@ -262,3 +262,33 @@ def compute_next_state(particles):
 def set_rest_rho(rho):
     global rest_rho
     rest_rho = rho
+
+
+def add_low_wall(func):
+    timeout = 100
+    timestamp = time()
+
+    @functools.wraps(func)
+    def inner(window):
+        import sfml as sf
+        X1_WALL = BOUND_X + 25
+        X2_WALL = BOUND_X + 55
+        Y_WALL = 20
+        if timeout + timestamp > time():
+            rectangle = sf.RectangleShape((X2_WALL - X1_WALL, Y_WALL))
+            rectangle.position = (X_SIZE - X2_WALL, Y_SIZE - BOUND_Y - Y_WALL)
+            rectangle.fill_color = sf.Color.GREEN
+            window.draw(rectangle)
+        func(window)
+    return inner
+
+
+@add_low_wall
+def wall(window):
+    X1_WALL = BOUND_X + 25
+    X2_WALL = BOUND_X + 55
+    Y_WALL = 20
+    rectangle = sf.RectangleShape((X2_WALL - X1_WALL, Y_SIZE - 2 * BOUND_Y - Y_WALL))
+    rectangle.position = (X_SIZE - X2_WALL, BOUND_Y)
+    rectangle.fill_color = sf.Color.GREEN
+    window.draw(rectangle)
