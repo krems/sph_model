@@ -141,38 +141,42 @@ def set_rest_rho(particles):
 
 
 def draw_borders(window):
-    rectangle = sf.RectangleShape((BOUND_X, Y_SIZE))
+    rectangle = sf.RectangleShape((BOUND_X - 2, Y_SIZE))
     rectangle.position = (0, 0)
     rectangle.fill_color = sf.Color.CYAN
     window.draw(rectangle)
 
-    rectangle1 = sf.RectangleShape((X_SIZE, BOUND_Y))
+    rectangle1 = sf.RectangleShape((X_SIZE, BOUND_Y - 2))
     rectangle1.position = (0, 0)
     rectangle1.fill_color = sf.Color.CYAN
     window.draw(rectangle1)
 
     rectangle2 = sf.RectangleShape((X_SIZE, BOUND_Y))
-    rectangle2.position = (0, Y_SIZE - BOUND_Y)
+    rectangle2.position = (0, Y_SIZE - BOUND_Y + 2)
     rectangle2.fill_color = sf.Color.CYAN
     window.draw(rectangle2)
 
     rectangle3 = sf.RectangleShape((X_SIZE, Y_SIZE))
-    rectangle3.position = (X_SIZE - BOUND_X, BOUND_Y)
+    rectangle3.position = (X_SIZE - BOUND_X + 2, BOUND_Y - 2)
     rectangle3.fill_color = sf.Color.CYAN
     window.draw(rectangle3)
 
 
 def main():
+    draw_low_part = True
     window = sf.RenderWindow(sf.VideoMode(X_SIZE, Y_SIZE), "Water under gravity")
     particles = water_behind_the_wall(500)
-    set_rest_rho(particles)
+    # set_rest_rho(particles)
+    SPH.set_rest_rho(1.)
     while window.is_open:
         for event in window.events:
             if type(event) is sf.CloseEvent:
                 window.close()
+            if type(event) is sf.MouseButtonEvent:
+                draw_low_part = False
         window.clear()
         for p in particles:
-            p.radius = 5
+            p.radius = 4
             p.outline_thickness = 0
             p.position = X_SIZE - p.x, Y_SIZE - p.y
             window.draw(p)
@@ -181,7 +185,7 @@ def main():
             if DRAW_PRESSURE:
                 draw_pressure(window, p)
         draw_borders(window)
-        SPH.wall(window)
+        SPH.wall(window, draw_low_part)
         window.display()
         particles = SPH.compute_next_state(particles)
 

@@ -144,9 +144,10 @@ class KernelsFirst:
 def _distance_q(lhs, rhs):
     return (lhs.x - rhs.x) ** 2 + (lhs.y - rhs.y) ** 2
 
+timeout = 10000
+draw_low_prt = True
 
 def enable_wall(func):
-    timeout = 100
     timestamp = time()
 
     @functools.wraps(func)
@@ -154,9 +155,9 @@ def enable_wall(func):
         X1_WALL = BOUND_X + 25
         X2_WALL = BOUND_X + 55
         Y_WALL = 20
-        if X1_WALL - X2_WALL < X1_WALL - subj.x < rest_dist and (subj.y > BOUND_Y + Y_WALL or timeout + timestamp > time()):
+        if X1_WALL - X2_WALL < X1_WALL - subj.x < rest_dist and (subj.y > BOUND_Y + Y_WALL or draw_low_prt):
             return -subj.m * (rest_dist - (X1_WALL - subj.x)) / dt ** 2
-        if 0 < subj.x - X2_WALL < rest_dist and (subj.y > BOUND_Y + Y_WALL or timeout + timestamp > time()):
+        if 0 < subj.x - X2_WALL < rest_dist and (subj.y > BOUND_Y + Y_WALL or draw_low_prt):
             return subj.m * (rest_dist - (subj.x - X2_WALL)) / dt ** 2
         return func(subj)
     return inner
@@ -265,7 +266,6 @@ def set_rest_rho(rho):
 
 
 def add_low_wall(func):
-    timeout = 100
     timestamp = time()
 
     @functools.wraps(func)
@@ -275,20 +275,27 @@ def add_low_wall(func):
         X2_WALL = BOUND_X + 55
         Y_WALL = 20
         if timeout + timestamp > time():
-            rectangle = sf.RectangleShape((X2_WALL - X1_WALL, Y_WALL))
-            rectangle.position = (X_SIZE - X2_WALL, Y_SIZE - BOUND_Y - Y_WALL)
+            rectangle = sf.RectangleShape((X2_WALL - X1_WALL, Y_WALL + 4))
+            rectangle.position = (X_SIZE - X2_WALL, Y_SIZE - BOUND_Y - Y_WALL - 2)
             rectangle.fill_color = sf.Color.GREEN
             window.draw(rectangle)
         func(window)
     return inner
 
 
-@add_low_wall
-def wall(window):
+# @add_low_wall
+def wall(window, draw_low_part):
+    global draw_low_prt
+    draw_low_prt = draw_low_part
     X1_WALL = BOUND_X + 25
     X2_WALL = BOUND_X + 55
     Y_WALL = 20
-    rectangle = sf.RectangleShape((X2_WALL - X1_WALL, Y_SIZE - 2 * BOUND_Y - Y_WALL))
-    rectangle.position = (X_SIZE - X2_WALL, BOUND_Y)
+    rectangle = sf.RectangleShape((X2_WALL - X1_WALL, Y_SIZE - 2 * BOUND_Y - Y_WALL + 2))
+    rectangle.position = (X_SIZE - X2_WALL, BOUND_Y - 2)
     rectangle.fill_color = sf.Color.GREEN
     window.draw(rectangle)
+    if draw_low_part:
+        rectangle = sf.RectangleShape((X2_WALL - X1_WALL, Y_WALL + 4))
+        rectangle.position = (X_SIZE - X2_WALL, Y_SIZE - BOUND_Y - Y_WALL - 2)
+        rectangle.fill_color = sf.Color.GREEN
+        window.draw(rectangle)
